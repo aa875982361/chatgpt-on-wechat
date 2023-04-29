@@ -6,6 +6,8 @@ Python Wechaty - https://github.com/wechaty/python-wechaty
 """
 import base64
 import os
+import io
+import requests
 import time
 import asyncio
 from bridge.context import Context
@@ -29,12 +31,20 @@ class WechatyChannel(ChatChannel):
 
     def __init__(self):
         super().__init__()
+        proxy_server = conf().get('proxy')
+        self.proxies = {
+            "http": proxy_server,
+            "https": proxy_server,
+        }
 
     def startup(self):
         config = conf()
         token = config.get('wechaty_puppet_service_token')
+        
         os.environ['WECHATY_PUPPET_SERVICE_TOKEN'] = token
         asyncio.run(self.main())
+        
+        
 
     async def main(self):
         
@@ -90,9 +100,18 @@ class WechatyChannel(ChatChannel):
                 pass
             logger.info('[WX] sendVoice={}, receiver={}'.format(reply.content, receiver))
         elif reply.type == ReplyType.IMAGE_URL: # 从网络下载图片
+            print("从网络下载图片")
             img_url = reply.content
+            # t = int(time.time())
+            # msg = FileBox.from_url(url=img_url, name=str(t) + '.png')
+            pic_res = requests.get(img_url, stream=True, proxies=self.proxies)
+            image_storage = io.BytesIO()
+            for block in pic_res.iter_content(1024):
+                # print("jieshou block")
+                image_storage.write(block)
+            image_storage.seek(0)
             t = int(time.time())
-            msg = FileBox.from_url(url=img_url, name=str(t) + '.png')
+            msg = FileBox.from_base64(base64.b64encode(image_storage.read()), str(t) + '.png')
             asyncio.run_coroutine_threadsafe(receiver.say(msg),loop).result()
             logger.info('[WX] sendImage url={}, receiver={}'.format(img_url,receiver))
         elif reply.type == ReplyType.IMAGE: # 从文件读取图片
