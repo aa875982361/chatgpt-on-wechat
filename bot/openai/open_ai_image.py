@@ -42,7 +42,7 @@ class OpenAIImage(object):
             logger.exception(e)
             return False, str(e)
     # 使用mj 生成图片
-    def create_img(self, query, retry_count=0):
+    def create_img(self, query, retry_count=0, session = {}):
         try:
             # 如果没配置接口 域名 则使用原本的
             if not conf().get('mj_host'):
@@ -51,19 +51,52 @@ class OpenAIImage(object):
             if conf().get('rate_limit_dalle') and not self.tb4dalle.get_token():
                 return False, "请求太快了，请休息一下再问我吧"
             logger.info("[OPEN_AI] mj_create_img image_query={}".format(query))
-            # 发送创建图片的请求
-            # 获取任务id
-            task_id = self.mj_send_prompt(query)
-            print("获取taskid 成功", task_id)
+            # 是不是U操作 U操作不用更新messageid
+            isUOperate = False
+            # 判断是创建 还是选择图片
+            if query in ["U1", "U2", "U3", "U4", "V1", "V2", "V3", "V4"]:
+                # 是V操作
+                isUOperate = query[0] == "U"
+                # 操作图片 判断有没有生成过图片
+                task_id = session["task_id"]
+                channel_id = session["channel_id"]
+                message_id = session["message_id"]
+                if (not task_id) or (not channel_id) or (not message_id):
+                    return False, "需要先生成图片才能操作"
+                # 发送操作图片的请求
+                self.mj_send_operate(task_id, channel_id, message_id, operate=query)
+            else:
+                # 发送创建图片的请求
+                # 获取任务id
+                task_id = self.mj_send_prompt(query)
+            print("获取 taskId 成功", task_id)
             # 根据任务id 轮训接口
-            image_url = self.get_img_url_by_task_id(task_id)
+            image_url, channel_id, message_id = self.get_img_url_by_task_id(task_id)
             if(not image_url):
                 return False, "请求超时或内容审核未通过"
             logger.info("[OPEN_AI] mj_create_img image_url={}".format(image_url))
-            return True, image_url
+            return True, image_url, task_id, channel_id, message_id, isUOperate
         except Exception as e:
             logger.exception(e)
             return False, str(e)
+    
+    # 发送点击操作的指令
+    def mj_send_operate(self, task_id, channel_id, message_id, operate):
+        response = requests.get(self.mj_host + '/operate?'+
+                                'taskId=' + task_id +
+                                '&channelId='+ channel_id +
+                                '&messageId='+ message_id +
+                                '&operateCode='+ operate
+        )
+        print("mj_send_operate response")
+        print(response)
+        response_obj = json.loads(response.text)
+        data = response_obj["data"]
+        print("mj_send_operate data")
+        print(data)
+        # print(data) # 打印响应内容
+        # print(data["taskId"]) # 打印响应内容
+        # return data["taskId"]
     # 发送生成图片的指令
     def mj_send_prompt(self, prompt):
         response = requests.get(self.mj_host + '/imagine?prompt=' + prompt +'&signStr='+ self.sign_str)
@@ -91,7 +124,7 @@ class OpenAIImage(object):
             is_complete = data["isComplete"]
             if is_complete:
                 # 已经完成 就返回结果
-                return data["imgUrl"]
-        return ""
+                return data["imgUrl"], data["channelId"], data["messageId"]
+        return "", "", ""
             # print(data) # 打印响应内容
             # print(isComplete) # 打印响应内容

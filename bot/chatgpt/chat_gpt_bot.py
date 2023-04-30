@@ -67,9 +67,16 @@ class ChatGPTBot(Bot,OpenAIImage):
             return reply
 
         elif context.type == ContextType.IMAGE_CREATE:
-            ok, retstring = self.create_img(query, 0)
+            session_id = context['session_id']
+            # 获取上一次图片任务的session
+            session = self.sessions.build_img_session(session_id)
+            ok, retstring, task_id, channel_id, message_id, isUOperate = self.create_img(query, 0, session)
             reply = None
             if ok:
+                # 记录上一次获取的多图 messageId channelId
+                if( not isUOperate) and task_id and  channel_id and message_id:
+                    # 记录下上一张图
+                    self.sessions.set_img_session(task_id=task_id, channel_id=channel_id, message_id=message_id)
                 reply = Reply(ReplyType.IMAGE_URL, retstring)
             else:
                 reply = Reply(ReplyType.ERROR, retstring)

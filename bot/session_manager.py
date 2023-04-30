@@ -42,6 +42,7 @@ class SessionManager(object):
         self.sessions = sessions
         self.sessioncls = sessioncls
         self.session_args = session_args
+        self.img_session = dict()
 
     def build_session(self, session_id, system_prompt=None):
         '''
@@ -54,6 +55,29 @@ class SessionManager(object):
             self.sessions[session_id].set_system_prompt(system_prompt)
         session = self.sessions[session_id]
         return session
+    
+    def build_img_session(self, session_id):
+        '''
+            如果session_id不在sessions中，创建一个新的session并添加到sessions中
+        '''
+        if session_id not in self.img_session:
+            self.img_session[session_id] = {
+                # "task_id": "",
+                # "channel_id": "",
+                # "message_id": "",
+            }
+        session = self.img_session[session_id]
+        return session
+    
+    def set_img_session(self, session_id, task_id, channel_id, message_id):
+        session = self.build_img_session(session_id)
+        if(task_id):
+            session["task_id"] = task_id
+        if(channel_id):
+            session["channel_id"] = channel_id
+        if(message_id):
+            session["message_id"] = message_id
+
     
     def session_query(self, query, session_id):
         session = self.build_session(session_id)
