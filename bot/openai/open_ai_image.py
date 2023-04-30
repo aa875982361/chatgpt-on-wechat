@@ -57,6 +57,8 @@ class OpenAIImage(object):
             print("获取taskid 成功", task_id)
             # 根据任务id 轮训接口
             image_url = self.get_img_url_by_task_id(task_id)
+            if(not image_url):
+                return False, "请求超时或内容审核未通过"
             logger.info("[OPEN_AI] mj_create_img image_url={}".format(image_url))
             return True, image_url
         except Exception as e:
@@ -76,17 +78,20 @@ class OpenAIImage(object):
         return data["taskId"]
     def get_img_url_by_task_id(self, task_id):
         is_complete = False
-        while not is_complete:
-            time.sleep(5)
+        # 最多十分钟 十分钟超时
+        max_timer = 10
+        while (not is_complete and max_timer > 0):
+            time.sleep(60)
+            max_timer = max_timer - 1
             print("轮训获取图片链接", task_id)
             response = requests.get(self.mj_host + '/task-result?taskId=' + task_id)
-            # print(response.status_code) # 打印响应状态码
+            print(response.status_code) # 打印响应状态码
             response_obj = json.loads(response.text)
             data = response_obj["data"]["result"]
             is_complete = data["isComplete"]
             if is_complete:
                 # 已经完成 就返回结果
                 return data["imgUrl"]
-            
+        return ""
             # print(data) # 打印响应内容
             # print(isComplete) # 打印响应内容
