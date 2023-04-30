@@ -107,11 +107,13 @@ class WechatyChannel(ChatChannel):
             pic_res = requests.get(img_url, stream=True, proxies=self.proxies)
             image_storage = io.BytesIO()
             for block in pic_res.iter_content(1024):
-                # print("jieshou block")
+                print("jieshou block")
                 image_storage.write(block)
             image_storage.seek(0)
             t = int(time.time())
+            print("将base 64 转化为文件")
             msg = FileBox.from_base64(base64.b64encode(image_storage.read()), str(t) + '.png')
+            print("下载文件完成")
             asyncio.run_coroutine_threadsafe(receiver.say(msg),loop).result()
             logger.info('[WX] sendImage url={}, receiver={}'.format(img_url,receiver))
         elif reply.type == ReplyType.IMAGE: # 从文件读取图片
