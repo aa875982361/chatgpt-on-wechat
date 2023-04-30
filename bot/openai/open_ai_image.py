@@ -54,6 +54,7 @@ class OpenAIImage(object):
             # 发送创建图片的请求
             # 获取任务id
             task_id = self.mj_send_prompt(query)
+            print("获取taskid 成功", task_id)
             # 根据任务id 轮训接口
             image_url = self.get_img_url_by_task_id(task_id)
             logger.info("[OPEN_AI] mj_create_img image_url={}".format(image_url))
@@ -72,6 +73,8 @@ class OpenAIImage(object):
     def get_img_url_by_task_id(self, task_id):
         is_complete = False
         while not is_complete:
+            time.sleep(5)
+            print("轮训获取图片链接", task_id)
             response = requests.get(self.mj_host + '/task-result?taskId=' + task_id)
             # print(response.status_code) # 打印响应状态码
             response_obj = json.loads(response.text)
@@ -80,6 +83,6 @@ class OpenAIImage(object):
             if is_complete:
                 # 已经完成 就返回结果
                 return data["imgUrl"]
-            time.sleep(5)
+            
             # print(data) # 打印响应内容
             # print(isComplete) # 打印响应内容
