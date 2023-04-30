@@ -79,7 +79,7 @@ class OpenAIImage(object):
     def get_img_url_by_task_id(self, task_id):
         is_complete = False
         # 最多十分钟 十分钟超时
-        max_timer = 10
+        max_timer = 5
         while (not is_complete and max_timer > 0):
             time.sleep(60)
             max_timer = max_timer - 1
