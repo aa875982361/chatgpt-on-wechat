@@ -65,8 +65,12 @@ class OpenAIImage(object):
     # 发送生成图片的指令
     def mj_send_prompt(self, prompt):
         response = requests.get(self.mj_host + '/imagine?prompt=' + prompt +'&signStr='+ self.sign_str)
+        print("mj_send_prompt response")
+        print(response)
         response_obj = json.loads(response.text)
         data = response_obj["data"]
+        print("mj_send_prompt data")
+        print(data)
         # print(data) # 打印响应内容
         # print(data["taskId"]) # 打印响应内容
         return data["taskId"]
