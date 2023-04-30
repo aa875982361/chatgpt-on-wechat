@@ -107,7 +107,7 @@ class WechatyChannel(ChatChannel):
             pic_res = requests.get(img_url, stream=True, proxies=self.proxies)
             image_storage = io.BytesIO()
             for block in pic_res.iter_content(1024):
-                print("jieshou block")
+                # print("jieshou block")
                 image_storage.write(block)
             image_storage.seek(0)
             t = int(time.time())
