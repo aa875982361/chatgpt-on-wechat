@@ -112,7 +112,7 @@ class OpenAIImage(object):
         is_complete = False
         # 最多十分钟 十分钟超时
         max_timer = 5
-        while (not is_complete and max_timer > 0):
+        while ((not is_complete) and (max_timer > 0)):
             time.sleep(60)
             max_timer = max_timer - 1
             print("轮训获取图片链接", task_id)
