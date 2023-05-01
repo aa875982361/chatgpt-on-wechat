@@ -101,7 +101,6 @@ class OpenAIImage(object):
     def mj_send_prompt(self, prompt):
         response = requests.get(self.mj_host + '/imagine?prompt=' + prompt +'&signStr='+ self.sign_str)
         print("mj_send_prompt response")
-        print(response)
         response_obj = json.loads(response.text)
         data = response_obj["data"]
         print("mj_send_prompt data")
@@ -123,8 +122,13 @@ class OpenAIImage(object):
             data = response_obj["data"]["result"]
             is_complete = data["isComplete"]
             if is_complete:
+                # imgUrl = data["imgUrl"]
+                imgUrl = data["proxyImgUrl"]
+                # 压缩图片
+                if imgUrl:
+                    imgUrl = imgUrl + "?width=1400&height=1400"
                 # 已经完成 就返回结果
-                return data["imgUrl"], data["channelId"], data["messageId"]
+                return imgUrl, data["channelId"], data["messageId"]
         return "", "", ""
             # print(data) # 打印响应内容
             # print(isComplete) # 打印响应内容
