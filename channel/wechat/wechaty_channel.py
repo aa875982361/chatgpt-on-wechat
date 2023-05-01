@@ -100,8 +100,8 @@ class WechatyChannel(ChatChannel):
                 pass
             logger.info('[WX] sendVoice={}, receiver={}'.format(reply.content, receiver))
         elif reply.type == ReplyType.IMAGE_URL: # 从网络下载图片
-            print("从网络下载图片")
             img_url = reply.content
+            print("从网络下载图片：" + img_url)
             # t = int(time.time())
             # msg = FileBox.from_url(url=img_url, name=str(t) + '.png')
             pic_res = requests.get(img_url, stream=True, proxies=self.proxies)
@@ -113,7 +113,9 @@ class WechatyChannel(ChatChannel):
             t = int(time.time())
             print("将base 64 转化为文件")
             msg = FileBox.from_base64(base64.b64encode(image_storage.read()), str(t) + '.png')
-            print("下载文件完成")
+            print("下载文件完成:" + img_url)
+            if not msg :
+                print("返回消息为空")
             asyncio.run_coroutine_threadsafe(receiver.say(msg),loop).result()
             logger.info('[WX] sendImage url={}, receiver={}'.format(img_url,receiver))
         elif reply.type == ReplyType.IMAGE: # 从文件读取图片
